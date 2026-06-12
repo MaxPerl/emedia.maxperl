@@ -1,0 +1,44 @@
+=head2 Mon Jun  8 20:00:51 2026: C<Module> L<pEFL|pEFL>
+
+=over 4
+
+=item *
+
+C<installed into: /opt/click.ubuntu.com/pefl.maxperl/current/pEFL/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.77>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Jun 12 04:30:42 2026: C<Module> L<pEFL|pEFL>
+
+=over 4
+
+=item *
+
+C<installed into: /opt/click.ubuntu.com/pefl.maxperl/current/pEFL/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.77>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
