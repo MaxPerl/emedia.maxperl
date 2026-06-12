@@ -1,0 +1,16 @@
+{
+    "name": "emedia.maxperl",
+    "description": "a media player written in perl/pEFL",
+    "architecture": "$ENV{ARCH}",
+    "title": "eMedia Player",
+    "hooks": {
+        "emedia": {
+            "apparmor": "emedia.apparmor",
+            "desktop":  "emedia.desktop",
+            "content-hub": "emedia-contenthub.json"
+        }
+    },
+    "version": "1.0.0",
+    "maintainer": "Maximilian Lika <Maximilian-Lika@gmx.de>",
+    "framework" : "$ENV{CLICK_FRAMEWORK}"
+}

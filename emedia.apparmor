@@ -1,0 +1,16 @@
+{
+    "policy_groups": [
+        "audio",
+        "video",
+        "content_exchange"
+    ],
+    "policy_version": "$ENV{APPARMOR_POLICY}",
+    "read_path": [
+        "/home/phablet",
+        "/home/phablet/",
+        "/home/phablet/**"
+    ],
+    "write_path": [
+        "/run/user/32011/"
+    ]
+}

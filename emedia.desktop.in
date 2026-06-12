@@ -1,0 +1,8 @@
+[Desktop Entry]
+_Name=eMedia Player
+Exec="run_app.sh"
+Icon=assets/logo.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true
+X-Lomiri-XMir-Enable=true
