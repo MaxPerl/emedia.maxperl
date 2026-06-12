@@ -56,9 +56,6 @@ if (! -e "$app_cache/imported_files") {
 	make_path("$app_cache/imported_files") or die "Path creation failed: $!\n";
 }
 
-if (! -e "/run/user/32011/.cache/efreet") {
-	make_path("/run/user/32011/.cache/efreet") or die "Path creation failed: $!\n";
-}
 
 my $pid =fork();
 
@@ -348,7 +345,7 @@ sub _push_video {
 	my $btn = pEFL::Elm::Button->add($nav);
 	$btn->text_set("Select File");
 	$btn->smart_callback_add("clicked"=>\&_push_fs, $nav);
-	my $it = $nav->item_push("Video",undef,$btn,$player,undef);
+	my $it = $nav->item_push("Player",undef,$btn,$player,undef);
 	
 	return $video;
 	

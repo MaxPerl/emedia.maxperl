@@ -9,8 +9,5 @@
         "/home/phablet",
         "/home/phablet/",
         "/home/phablet/**"
-    ],
-    "write_path": [
-        "/run/user/32011/"
     ]
 }
