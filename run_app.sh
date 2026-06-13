@@ -1,7 +1,6 @@
 #!/bin/sh
 set -eu
 
-APP_DIR="/opt/click.ubuntu.com/emedia.maxperl/current"
 APP_ID="emedia.maxperl"
 
 APP_HOME="/home/phablet/.local/share/${APP_ID}"

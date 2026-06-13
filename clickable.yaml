@@ -2,7 +2,6 @@ clickable_minimum_required: 8.8.0
 framework: ubuntu-touch-24.04-1.x
 builder: cmake
 kill: emedia
-skip_review: true
 libraries:
     gstlibav:
         dependencies_host:
@@ -118,6 +117,7 @@ libraries:
             - ninja -C build
             - env DESTDIR="${INSTALL_DIR}" ninja -C build install
             - rm ${INSTALL_DIR}/opt/click.ubuntu.com/emedia.maxperl/current/share/gdb/auto-load/usr/lib/libeo.so.1.28.1-gdb.py
+            - rm -r ${INSTALL_DIR}/opt/click.ubuntu.com/emedia.maxperl/current/lib/pkgconfig
 dependencies_target:
     - liblua5.1.0-dev
     - liblua5.1.0
@@ -157,7 +157,9 @@ install_root_data:
     - "default.edj"
     - "perl5"
 install_data:
-        $EFL_LIB_INSTALL_DIR/opt/click.ubuntu.com/emedia.maxperl/current/bin : ""
+        $EFL_LIB_INSTALL_DIR/opt/click.ubuntu.com/emedia.maxperl/current/bin/efreetd : "bin"
+        $EFL_LIB_INSTALL_DIR/opt/click.ubuntu.com/emedia.maxperl/current/bin/ethumbd : "bin"
+        $EFL_LIB_INSTALL_DIR/opt/click.ubuntu.com/emedia.maxperl/current/bin/ethumbd_client : "bin"
         $EFL_LIB_INSTALL_DIR/opt/click.ubuntu.com/emedia.maxperl/current/lib : ""
         $EFL_LIB_INSTALL_DIR/opt/click.ubuntu.com/emedia.maxperl/current/share : ""
         #$GSTLIBAV_LIB_INSTALL_DIR/opt/click.ubuntu.com/emedia.maxperl/current/bin/* : "bin"
