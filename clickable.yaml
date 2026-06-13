@@ -111,11 +111,13 @@ libraries:
             - libyuv-dev
         builder: custom
         build:
+            - wget https://download.enlightenment.org/rel/libs/efl/efl-1.28.1.tar.xz
             - tar xvf efl-1.28.1.tar.xz
             - "perl ${ROOT}/patch-emotion.pl ${ROOT} ${BUILD_DIR}"
             - meson --cross-file "${SRC_DIR}/dist/lomiri-${ARCH_TRIPLET}.ini" --prefix=/opt/click.ubuntu.com/emedia.maxperl/current -Dbuild-tests=false -Dbindings="" -Dwl=true -Dopengl=full -Deeze=false -Dinput=false -Deina-magic-debug=false -Dbuild-tests=false build "${BUILD_DIR}/efl-1.28.1"
             - ninja -C build
             - env DESTDIR="${INSTALL_DIR}" ninja -C build install
+            - rm ${INSTALL_DIR}/opt/click.ubuntu.com/emedia.maxperl/current/share/gdb/auto-load/usr/lib/libeo.so.1.28.1-gdb.py
 dependencies_target:
     - liblua5.1.0-dev
     - liblua5.1.0
