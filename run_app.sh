@@ -1,11 +1,14 @@
 #!/bin/sh
 set -eu
 
-APP_ID="emedia.maxperl"
+export APP_ID="emedia.maxperl_emedia_1.0.1"
+export UBUNTU_APP_LAUNCH_ID="emedia.maxperl_emedia_1.0.1"
 
-APP_HOME="/home/phablet/.local/share/${APP_ID}"
-APP_CACHE="/home/phablet/.cache/${APP_ID}"
-APP_CONFIG="/home/phablet/.config/${APP_ID}"
+APP_NAME="emedia.maxperl"
+
+APP_HOME="/home/phablet/.local/share/${APP_NAME}"
+APP_CACHE="/home/phablet/.cache/${APP_NAME}"
+APP_CONFIG="/home/phablet/.config/${APP_NAME}"
 
 export XDG_DATA_HOME="$APP_HOME/.local/share"
 export XDG_CACHE_HOME="$APP_CACHE"
@@ -33,5 +36,6 @@ export PERL5LIB="$APP_DIR/perl5:$APP_DIR/perl5/lib/perl5:${PERL5LIB:-}"
 export EINA_LOG_BACKTRACE=0
 #export GST_DEBUG="*:3"
 export GST_PLUGIN_PATH="$APP_DIR/lib/gstreamer-1.0"
+export QT_QPA_PLATFORM=xcb
 
 exec "bin/perl" "$APP_DIR/UbuntuApp.pl" "$@" 

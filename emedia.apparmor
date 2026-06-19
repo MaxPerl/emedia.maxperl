@@ -4,10 +4,5 @@
         "video",
         "content_exchange"
     ],
-    "policy_version": "$ENV{APPARMOR_POLICY}",
-    "read_path": [
-        "/home/phablet",
-        "/home/phablet/",
-        "/home/phablet/**"
-    ]
+    "policy_version": "$ENV{APPARMOR_POLICY}"
 }

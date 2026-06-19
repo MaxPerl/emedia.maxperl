@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: emedia.maxperl\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-12 18:52+0000\n"
+"POT-Creation-Date: 2026-06-15 08:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: ../qml/ImportPage.qml:45
+msgid "Choose"
+msgstr ""
 
 #: ../qml/Main.qml:39
 msgid "emedia"

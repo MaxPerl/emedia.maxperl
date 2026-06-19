@@ -1,6 +1,3 @@
-# Based on the multimedia tutorial code
-# see https://www.enlightenment.org/develop/legacy/tutorial/multimedia_tutorial
-#
 #! /usr/bin/perl
 use strict;
 use warnings;
@@ -11,14 +8,14 @@ use pEFL::Evas;
 use pEFL::Elm;
 use pEFL::Elm::App;
 use pEFL::Emotion;
-use Protocol::DBus;
-use Protocol::DBus::Client;
-use pEFL::Ecore;
 
 use vKbd;
 
 use File::Path qw(make_path remove_tree);
-use File::Copy qw(copy);
+
+use ContentHub;
+
+use IPC::Run qw(run);
 
 my $info = 0;
 
@@ -26,7 +23,7 @@ my $info = 0;
 # APP INFORMATION
 my $app_name = "emedia.maxperl";
 my $app_title = "emedia";
-my $app_version = "1.0.0";
+my $app_version = "1.0.1";
 ##########################################
 
 ##########################################
@@ -50,59 +47,38 @@ if (! -e "$app_cache/.cache/efreet") {
 
 if (! -e "$app_cache/run") {
 	make_path("$app_cache/run") or die "Path creation failed: $!\n";
+	chmod 0700, "$app_cache/run";
 }
 
 if (! -e "$app_cache/imported_files") {
 	make_path("$app_cache/imported_files") or die "Path creation failed: $!\n";
 }
 
-
-my $pid =fork();
-
-if (!defined($pid)) {
-	die "Fork fehlgeschlagen: $!\n";
-}
-
 my $win; my $video; my $nav; my $vkbd; my $player;
 
-if ($pid ==0) {
-	# Later we can here open content hub helpers 
-	# For import/export (see Min Browser for example)
-	#sleep(1);
-	#my $programm = "qmlscene";
-	#my $qml_datei = "content_hub.qml";
-	
-	# Important: Don't use the shell!!
-	#exec($program, $qml_datei);
-}
-else {
 # Check for Content Hub
+my $content_hub = ContentHub->new(app_id => "$app_name"."_$app_title"."_$app_version",
+	on_import_cb => \&_look_for_imports);
 my $open_file = "";
-my $path;
-if (-d "$app_cache/HubIncoming") {
-	opendir(my $dh, "$app_cache/HubIncoming") || die "Can't opendir: $!";
-	($path) = grep { !/^\./ &&  -d "$app_cache/HubIncoming/$_" } readdir($dh);
-	closedir $dh;
-}
+my ($transfer_id, $path) = $content_hub->get_hub_transfer();
 if ($path) {
-	$open_file = _import_content_hub_dir("$app_cache/HubIncoming/$path");
+	$open_file = $content_hub->import_path($path);
 }
-
 
 pEFL::Elm::init($#ARGV, \@ARGV);
 pEFL::Elm::App::name_set($app_name);
 
 pEFL::Elm::Config::profile_set("mobile");
 if ($ENV{QTWEBKIT_DPR}) {
-	my $scale = $ENV{QTWEBKIT_DPR} * 1.5;
+	my $scale = $ENV{QTWEBKIT_DPR} * 1.6;
 	pEFL::Elm::Config::scale_set($scale);
 }
 elsif ($ENV{GRID_UNIT_PX}) {
-	my $scale = $ENV{GRID_UNIT_PX} * 1.5 / 10;
+	my $scale = $ENV{GRID_UNIT_PX} * 1.6 / 10;
 	pEFL::Elm::Config::scale_set($scale);	
 }
 else {
-	pEFL::Elm::Config::scale_set(3.0);
+	pEFL::Elm::Config::scale_set(3.2);
 }
 
 pEFL::Elm::Theme::overlay_add("./default.edj");
@@ -129,13 +105,12 @@ $nav->show();
 $big_box->show();
 
 $video = _push_video($nav);	
+$content_hub->on_import_data($video);
+
 if ($open_file) {
 	$video->file_set($open_file);
 	$video->play();
 } 
-else {
-	_push_fs($nav);
-}
 
 #######################################################
 # Important: We have to make the app fullscreen!!!!
@@ -144,23 +119,7 @@ my ($x, $y, $w, $h) = $win->screen_size_get();
 $win->resize($w,$h);
 $win->maximized_set(1);
 
-if (-e "$app_cache/HubIncoming") {
-	my $monitor = pEFL::Ecore::FileMonitor->add(
-    	"$app_cache/HubIncoming",
-    	\&_look_for_imports,
-    	$video
-	);
-}
-else {
-	# das HubIncoming Verzeichnis existiert noch nicht.
-	# Wir können den FileMonitor erst aktivieren, wenn 
-	# es durch den Content Hub erstellt wurd!
-	my $monitor = pEFL::Ecore::FileMonitor->add(
-    	$app_cache,
-    	\&_register_hub_incoming_watcher,
-    	$video
-	);
-}
+$content_hub->init();
 
 pEFL::Elm::run();
 
@@ -168,159 +127,15 @@ pEFL::Elm::shutdown();
 
 remove_tree("$app_cache/imported_files") or die "Could not remove imported files: $!\n";
 
-}
-
-sub _register_hub_incoming_watcher {
-	my ($video, $monitor_obj, $event, $path) = @_;
-	
-	# Directory created!!!
-	if ($event == 2 && $path eq "$app_cache/HubIncoming") {
-		
-		# Wir müssen den ersten Import manuell durchführen, weil der File Monitor
-		# ja erst nach der Erstellung des HubIncoming Directories (inklusive des ersten
-		# Content Hub File exchange startet)
-		opendir(my $dh, "$app_cache/HubIncoming") || die "Can't opendir: $!";
-		my ($path) = grep { !/^\./ &&  -d "$app_cache/HubIncoming/$_" } readdir($dh);
-		closedir $dh;
-		
-		if ($path) {
-			$video->stop();
-			my $new_file =  _import_content_hub_dir("$app_cache/HubIncoming/$path");		
-			$video->file_set("$new_file");
-			$video->play();
-		}
-		
-		my $monitor = pEFL::Ecore::FileMonitor->add(
-    	"$app_cache/HubIncoming",
-    	\&_look_for_imports,
-    	$video # Landet im ersten Argument ($data)
-		);
-		$monitor_obj->del();
-	}
-	
-}
-
 sub _look_for_imports {
-	my ($video, $monitor_obj, $event, $path) = @_;
+	my ($content_hub, $path, $video) = @_;
 	
-	# Directory created!!!
-	if ($event == 2) {
+	$video->stop();
 		
-		$video->stop();
-		my $new_file =  _import_content_hub_dir($path);		
-		$video->file_set("$new_file");
-		$video->play();
-	}
-}
-
-sub _import_content_hub_dir {
-	my ($path) = @_;
-	
-	my ($transfer_id) = $path =~ /(\d+)$/;
-	
-		my $app_id = "$app_name"."_$app_title"."_$app_version";
-		
-		# Im DBus Path sind Sonderzeichen verboten
-		my $encoded_app_id = $app_id;
-		$encoded_app_id =~ s/([^a-zA-Z0-9])/sprintf("_%02x", ord($1))/eg;
-		my $service   = "com.lomiri.content.dbus.Service";
-		my $dbus_path = "/transfers/$encoded_app_id/import";
-		my $interface = "com.lomiri.content.dbus.Transfer";
+	my $new_file =  $content_hub->import_path($path);		
 			
-		my $dbus = Protocol::DBus::Client::login_session();
-		$dbus->initialize();
-		
-		# Send collect an das DBus Interface
-		$dbus->send_call(
-    		path => "$dbus_path/$transfer_id",
-    		interface => $interface,
-    		member => 'Collect',
-    		destination => $service,
-		);
-		
-		# Auf Collect folgt wohl keine Antwort!
-		#my $msg = $dbus->get_message();
-		
-		opendir(my $dh, $path) || die "Can't opendir $path: $!";
-		my @files = grep { !/^\./ &&  -e "$path/$_" } readdir($dh);
-		closedir $dh;
-		
-		my $file = $files[0];
-
-		my $new_path = "$app_cache/imported_files"; 
-		make_path("$new_path/$transfer_id") if (! -e "$new_path/$transfer_id");
-		copy("$path/$file", "$new_path/$transfer_id/$file") or die "Copy Hub file to import dir failed: $!";
-		
-		my $got_response;
-		$dbus->send_call(
-    		path => "$dbus_path/$transfer_id",
-    		interface => $interface,
-    		member => 'Finalize',
-    		destination => $service
-		)->then( sub {
-        	$got_response = 1;
-    	});
-		$dbus->get_message() while !$got_response;
-		
-		return "$new_path/$transfer_id/$file";
-	
-}
-
-sub _push_fs {
-	my ($nav) = @_;
-	
-	my $vbox = pEFL::Elm::Box->add($nav);
-	$vbox->size_hint_weight_set(EVAS_HINT_EXPAND,EVAS_HINT_EXPAND);
-	$vbox->size_hint_align_set(EVAS_HINT_FILL,EVAS_HINT_FILL);
-	$vbox->show();
-
-	my $fs = pEFL::Elm::Fileselector->add($nav);
-	$fs->style_set("base");
-	$fs->expandable_set(0);
-	$fs->path_set("/home/phablet/Videos");
-
-	$fs->size_hint_weight_set(EVAS_HINT_EXPAND,EVAS_HINT_EXPAND);
-	$fs->size_hint_align_set(EVAS_HINT_FILL,EVAS_HINT_FILL);
-	$fs->show();
-	$vbox->pack_end($fs);
-	
-	#my $vkbd = vKbd->new($vbox);
-	#$vbox->pack_end($vkbd->elm_box());
-	
-	my $en1 = $fs->part_content_get("elm.swallow.search");
-	$en1->smart_callback_add("clicked" => \&toggle_keyboard, $vkbd);
-	
-	my $it = $nav->item_push("Select File",undef,undef,$vbox,undef);
-	#$it->title_enabled_set(0,0);
-	
-	$fs->smart_callback_add("done", \&_fs_done, $nav);
-	$fs->smart_callback_add("activated", \&_fs_done, $nav);
-}
-
-sub _fs_done {
-
-	my ($data, $obj, $ev_info) = @_;
-	
-	if ($ev_info) {
-		my $selected = pEFL::ev_info2s($ev_info);
-		$data->item_pop();
-		$video->file_set($selected);
-		$video->play();
-	}
-	else {
-		$data->item_pop();
-	}
-
-}
-
-sub toggle_keyboard {
-	my ($vkbd, $object, $ev_info) = @_;
-	bless($object,"pEFL::Elm::Entry");
-	
-	$vkbd->elm_target($object);
-	if (!$vkbd->is_visible()) {
-		$vkbd->show_keyboard();
-	}
+	$video->file_set("$new_file");
+	$video->play();
 }
 
 sub _push_video {
@@ -344,11 +159,19 @@ sub _push_video {
 
 	my $btn = pEFL::Elm::Button->add($nav);
 	$btn->text_set("Select File");
-	$btn->smart_callback_add("clicked"=>\&_push_fs, $nav);
+	$btn->smart_callback_add("clicked"=>\&_open_import_helper, $nav);
 	my $it = $nav->item_push("Player",undef,$btn,$player,undef);
 	
 	return $video;
 	
+}
+
+sub _open_import_helper {
+	my ($nav) = @_;
+	my @cmd = ("qmlscene", "ImportPage.qml");
+	
+	my $in; my $out; my $err;
+	run(\@cmd, \$in, \$out, \$err);
 }
 
 sub _player_stop_cb {

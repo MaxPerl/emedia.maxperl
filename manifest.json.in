@@ -10,7 +10,7 @@
             "content-hub": "emedia-contenthub.json"
         }
     },
-    "version": "1.0.0",
+    "version": "1.0.1",
     "maintainer": "Maximilian Lika <Maximilian-Lika@gmx.de>",
     "framework" : "$ENV{CLICK_FRAMEWORK}"
 }
